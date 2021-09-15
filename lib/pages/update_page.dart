@@ -1,6 +1,8 @@
+import 'package:architechrure/controller/update_controller.dart';
 import 'package:architechrure/model/post_model.dart';
 import 'package:architechrure/services/http_request.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class UpdatePage extends StatefulWidget {
 
@@ -14,44 +16,12 @@ class UpdatePage extends StatefulWidget {
 }
 
 class _UpdatePageState extends State<UpdatePage> {
-  bool isLoading = false;
-  var titleController = TextEditingController();
-  var bodyController = TextEditingController();
-  Post oldPost;
-
-  _getOldPost() {
-    setState(() {
-      oldPost = widget.post;
-      titleController.text = oldPost.title;
-      bodyController.text = oldPost.body;
-    });
-  }
-
-  _apiCreatePost() async{
-    setState(() {
-      isLoading = true;
-    });
-
-    String title = titleController.text.trim().toString();
-    String body = bodyController.text.trim().toString();
-    Post post = Post(title: title, body: body, userId: oldPost.userId, id: oldPost.id);
-
-    var response = await Network.PUT(Network.API_UPDATE + oldPost.id.toString(), Network.paramsUpdate(post));
-    print(response);
-    setState(() {
-      isLoading = false;
-      if(response != null) {
-        Navigator.pop(context, response);
-      } else {
-        print("Error");
-      }
-    });
-  }
+final _controlle=Get.put(UpdateController());
 
   @override
   void initState() {
     super.initState();
-    _getOldPost();
+    _controlle.getOldPost(widget.post);
   }
 
   @override
@@ -61,48 +31,50 @@ class _UpdatePageState extends State<UpdatePage> {
         title: Text('Update post'),
       ),
       backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          Container(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: InputDecoration(
-                    labelText: "Post Title",
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.only(right: 15, left: 15),
-                  ),
+      body: Obx(
+          ()=>Stack(
+            children: [
+              Container(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _controlle.titleController(),
+                      decoration: InputDecoration(
+                        labelText: "Post Title",
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.only(right: 15, left: 15),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 15,
+                    ),
+                    TextField(
+                      controller: _controlle.bodyController(),
+                      decoration: InputDecoration(
+                        labelText: "Post Body",
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.only(
+                            right: 15, top: 15, bottom: 50, left: 15),
+                      ),
+                      maxLines: 7,
+                    ),
+                    SizedBox(height: 30,),
+                    RaisedButton(
+                      onPressed: () {
+                        _controlle.apiCreatePost();
+                      },
+                      child: Text ("Update"),
+                      color: Colors.blue,
+                    ),
+                  ],
                 ),
-                SizedBox(
-                  height: 15,
-                ),
-                TextField(
-                  controller: bodyController,
-                  decoration: InputDecoration(
-                    labelText: "Post Body",
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.only(
-                        right: 15, top: 15, bottom: 50, left: 15),
-                  ),
-                  maxLines: 7,
-                ),
-                SizedBox(height: 30,),
-                RaisedButton(
-                  onPressed: () {
-                    _apiCreatePost();
-                  },
-                  child: Text ("Update"),
-                  color: Colors.blue,
-                ),
-              ],
-            ),
-          ),
+              ),
 
-          isLoading ? Center(child: CircularProgressIndicator()) : SizedBox.shrink(),
-        ],
-      ),
+              _controlle.isLoading() ? Center(child: CircularProgressIndicator()) : SizedBox.shrink(),
+            ],
+          ),
+      )
     );
   }
 }
